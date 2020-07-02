@@ -124,6 +124,7 @@ void setup() {
   Serial.begin(9600);
 
   pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, HIGH);
   
   initWifi();
   delay(100);
