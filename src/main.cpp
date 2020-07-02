@@ -44,14 +44,6 @@ void callBack(char* topic, byte* payload, unsigned int length) { // Функци
     is_on = strPayload == "on" ? true : false;
   }
 
-  // if (strTopic == topics[2]) { // Время покая
-  //   period_time = strPayload.toInt();
-  // }
-  
-  // if (strTopic == topics[3]){ // Как долго происходит полив
-  //   watering_time = strPayload.toInt();
-  // }
-
   // Отправляем id модуля раз в минуту
   if (millis() - timer > 30*1000) {
     client.publish(topics[0].c_str(), String(id).c_str());
