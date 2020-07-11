@@ -4,7 +4,7 @@
 #include <Arduino.h>
 
 
-const uint8_t RELAY_PIN = 0;
+const uint8_t RELAY_PIN = 2;
 
 const char* ssid = "ERRS"; // Название WIFI
 const char* password = "enes5152"; // Код от WIFI

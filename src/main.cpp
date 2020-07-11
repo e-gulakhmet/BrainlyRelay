@@ -3,26 +3,24 @@
 #include <PubSubClient.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include <EEPROM.h>
 
 #include "main.h"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-uint8_t id = EEPROM.read(0);
+String mac = WiFi.macAddress();
 
-const String topics[] = {
-  "ralay/" + String(id) + "/id",
-  "relay/" + String(id) + "/tx",
-  "relay/" + String(id) + "/rx"
+String topics[] = {
+  "relay/id",
+  "relay/" + mac + "/tx",
+  "relay/" + mac + "/rx"
 };
 
 bool is_on;
 
 
 void callBack(char* topic, byte* payload, unsigned int length) { // Функция в которой обрабатываются все присланные команды
-  static unsigned long timer;
 
   Serial.print("Message arrived [");
   Serial.print(topic);
@@ -44,13 +42,6 @@ void callBack(char* topic, byte* payload, unsigned int length) { // Функци
     is_on = strPayload == "on" ? true : false;
   }
 
-  // Отправляем id модуля раз в минуту
-  if (millis() - timer > 30*1000) {
-    client.publish(topics[0].c_str(), String(id).c_str());
-    timer = millis();
-  }
-
-
   if (strTopic == topics[1]) { // Если прилетела команда статус,
     // отправляем состояние реле
     if (strPayload == "status") {
@@ -66,7 +57,7 @@ void connect() {
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     if (client.connect(name)) {
-      for (int i = 0; i < 4; i++) {
+      for (int i = 0; i < 3; i++) {
         client.subscribe(topics[i].c_str());
       }
       client.setCallback(callBack);
@@ -105,7 +96,8 @@ void initWifi(){ // Настройка WIFI
 
 
 void initWifiUpd() {
-  ArduinoOTA.setHostname(("RELAY" + String(id)).c_str()); // Задаем имя сетевого порта
+  ArduinoOTA.setHostname(("RELAY-" + mac).c_str()); // Задаем имя сетевого порта
+  Serial.print("OTA Adress:"); Serial.println(ArduinoOTA.getHostname());
   //ArduinoOTA.setPassword((const char *)"0000"); // Задаем пароль доступа для удаленной прошивки
   ArduinoOTA.begin(); // Инициализируем OTA
 }
@@ -121,15 +113,14 @@ void setup() {
   initWifi();
   delay(100);
   connect();
+
+  // mac = WiFi.macAddress();
   
   initWifiUpd();
 
   // Задаем рандомное id модулю и сохраняем его,
   // чтобы затем была возможность управлять сразу несколькими модулями
-  if (id == 255 || id == 0) {
-    id = random(100, 200);
-    EEPROM.write(0, id);
-  }
+
 }
 
 
@@ -143,4 +134,11 @@ void loop() {
   ArduinoOTA.handle(); // Всегда готовы к прошивке
 
   digitalWrite(RELAY_PIN, is_on ? LOW : HIGH);
+
+  // Отправляем id модуля раз в минуту
+  static unsigned long timer;
+  if (millis() - timer > 10*1000) {
+    client.publish(topics[0].c_str(), mac.c_str());
+    timer = millis();
+  }
 }
