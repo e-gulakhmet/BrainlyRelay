@@ -12,9 +12,10 @@ PubSubClient client(espClient);
 String mac = WiFi.macAddress();
 
 String topics[] = {
-  "relay/id",
-  "relay/" + mac + "/tx",
-  "relay/" + mac + "/rx"
+  "home/id",
+  "home/" + mac + "/type",
+  "home/" + mac + "/tx",
+  "home/" + mac + "/rx"
 };
 
 bool is_on;
@@ -38,14 +39,14 @@ void callBack(char* topic, byte* payload, unsigned int length) { // Функци
   Serial.println();
 
 
-  if (strTopic == topics[1]){ // Полив по команде
+  if (strTopic == topics[2]){ // Полив по команде
     is_on = strPayload == "on" ? true : false;
   }
 
-  if (strTopic == topics[1]) { // Если прилетела команда статус,
+  if (strTopic == topics[3]) { // Если прилетела команда статус,
     // отправляем состояние реле
     if (strPayload == "status") {
-      client.publish(topics[2].c_str(), is_on ? "on" : "off");
+      client.publish(topics[3].c_str(), is_on ? "on" : "off");
     }
   }
 }
@@ -113,14 +114,8 @@ void setup() {
   initWifi();
   delay(100);
   connect();
-
-  // mac = WiFi.macAddress();
   
   initWifiUpd();
-
-  // Задаем рандомное id модулю и сохраняем его,
-  // чтобы затем была возможность управлять сразу несколькими модулями
-
 }
 
 
@@ -139,6 +134,8 @@ void loop() {
   static unsigned long timer;
   if (millis() - timer > 10*1000) {
     client.publish(topics[0].c_str(), mac.c_str());
+    delay(100);
+    client.publish(topics[1].c_str(), name);
     timer = millis();
   }
 }
