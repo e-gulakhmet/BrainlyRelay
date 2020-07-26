@@ -12,8 +12,7 @@ PubSubClient client(espClient);
 String mac = WiFi.macAddress();
 
 String topics[] = {
-  "home/id",
-  "home/" + mac + "/type",
+  "home/client",
   "home/" + mac + "/tx",
   "home/" + mac + "/rx"
 };
@@ -39,11 +38,11 @@ void callBack(char* topic, byte* payload, unsigned int length) { // Функци
   Serial.println();
 
 
-  if (strTopic == topics[2]){ // Полив по команде
+  if (strTopic == topics[1]){ // Полив по команде
     is_on = strPayload == "on" ? true : false;
   }
 
-  if (strTopic == topics[3]) { // Если прилетела команда статус,
+  if (strTopic == topics[2]) { // Если прилетела команда статус,
     // отправляем состояние реле
     if (strPayload == "status") {
       client.publish(topics[3].c_str(), is_on ? "on" : "off");
@@ -133,9 +132,8 @@ void loop() {
   // Отправляем id модуля раз в минуту
   static unsigned long timer;
   if (millis() - timer > 10*1000) {
-    client.publish(topics[0].c_str(), mac.c_str());
-    delay(100);
-    client.publish(topics[1].c_str(), name);
+    // client.publish(topics[0].c_str(), mac.c_str());
+    client.publish(topics[0].c_str(), (mac + ';' + String(name)).c_str());
     timer = millis();
   }
 }
