@@ -40,12 +40,13 @@ void callBack(char* topic, byte* payload, unsigned int length) { // Функци
 
   if (strTopic == topics[1]){ // Полив по команде
     is_on = strPayload == "on" ? true : false;
+    client.publish(topics[2].c_str(), is_on ? "on" : "off");
   }
 
   if (strTopic == topics[2]) { // Если прилетела команда статус,
     // отправляем состояние реле
     if (strPayload == "status") {
-      client.publish(topics[3].c_str(), is_on ? "on" : "off");
+      client.publish(topics[2].c_str(), is_on ? "on" : "off");
     }
   }
 }
@@ -131,7 +132,7 @@ void loop() {
 
   // Отправляем id модуля раз в минуту
   static unsigned long timer;
-  if (millis() - timer > 10*1000) {
+  if (millis() - timer > 60*1000) {
     // client.publish(topics[0].c_str(), mac.c_str());
     client.publish(topics[0].c_str(), (mac + ';' + String(name)).c_str());
     timer = millis();
